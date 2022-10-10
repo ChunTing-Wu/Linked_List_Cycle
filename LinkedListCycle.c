@@ -27,7 +27,7 @@ struct ListNode* initListNode(int forloop) {
 struct ListNode* initErrorList(int forloop,int Errorpoint)
 {
    struct ListNode* forveri= (struct ListNode*)malloc(sizeof(struct ListNode));
-   struct ListNode* ErrorNode= (struct ListNode*)malloc(sizeof(struct ListNode));
+   struct ListNode* ErrorNode;
    forveri->val = 0;
    struct ListNode* head = forveri;
    for(int i = 1; i< forloop ; i++)
@@ -58,14 +58,9 @@ bool hasCycle(struct ListNode *head) {
         return false;      
 }
 int main(){
-    struct ListNode* first = NULL;
-    struct ListNode* second = NULL;
-    struct ListNode* third = NULL;
-
-
-    first = initErrorList(5,2);
-    second = initListNode(5);
-    third = initListNode(10);
+    struct ListNode* first = initErrorList(5,2);
+    struct ListNode* second = initListNode(5);
+    struct ListNode* third = initListNode(10);
 
     printf("%d\n",hasCycle(first));
     printf("%d\n",hasCycle(second));
