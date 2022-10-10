@@ -5,6 +5,12 @@ len3: .word 5
 len4: .word 2
 
 
+fff: .string "t1: "
+ddd:  .string "t2: "
+
+Cycle: .string "1\n"
+NoCycle:  .string "0\n"
+
 first: .string "=========first=========\n "
 second: .string "=========second=========\n "
 third:  .string "=========third=========\n "
@@ -13,28 +19,28 @@ third:  .string "=========third=========\n "
 main:
     
     # first
-    #la a0, first
-    #li a7, 4
-    #ecall
+    la a0, first
+    li a7, 4
+    ecall
     
-    #lw a1, len1                  # a1 = arr_len
-    #jal ra, initNormalList      # a0 = return value = struct ListNode head
-    #jal ra, start_cycle
+    lw a1, len1                 # a1 = arr_len
+    jal ra, initNormalList      # a0 = return value = struct ListNode head
+    jal ra, start_cycle
  
     # second
-    #la a0, second
-    #li a7, 4
-    #ecall
+    la a0, second
+    li a7, 4
+    ecall
 
-    #lw a1, len2                  # a1 = arr_len
-    #jal ra, initNormalList      # a0 = return value = struct ListNode head
-    #jal ra, start_cycle
+    lw a1, len2                 # a1 = arr_len
+    jal ra, initNormalList      # a0 = return value = struct ListNode head
+    jal ra, start_cycle
     
     # third
     la a0, third
     li a7, 4
     ecall
-    lw a1, len3                  # a1 = arr_len
+    lw a1, len3                # a1 = arr_len
     lw a2, len4
     jal ra, initErrorList      # a0 = return value = struct ListNode head
     jal ra, start_cycle
@@ -42,17 +48,17 @@ main:
 
 start_cycle:
     # prologue
-    addi sp, sp, -8
+    addi sp, sp, -8   # push stack pointer to the bottom
     sw ra, 0(sp)
     sw a0, 4(sp)
 
     # body
     mv t1, a0        # t1 = list head
+    mv t6, a0
     li a7, 4
     ecall
-    # print end
     
-    jal ra, print_list   # for test linked list function
+    jal ra, has_cycle   # unit test
     
     # epilogue
     lw ra, 0(sp)        # back to main
@@ -71,7 +77,7 @@ initNormalList:
     sw s0, 4(sp)        # store list head to stack
        
     jal ra malloc       # for - malloc
-    addi s1, zero, 0    # head->val = 0, 
+    addi s1, x0, 0      # head->val = 0, 
     addi t3, s0  , 0    # ListNode head
     
     addi s0, s0, 8
@@ -88,12 +94,12 @@ loop:
     addi s0,s0, 8       # push new ListNode
     
     
-    bne s1, t0 loop     # for loop condition
+    bne s1, t0 loop     # for-loop condition
     
-    sw zero, 4(t3)
+    sw x0, 4(t3)
     
     lw ra, 0(sp)        # load return address
-    lw a0, 4(sp)        # load list head address
+    lw a0, 4(sp)        # get back list head
     addi sp, sp, 8
     
     jr ra
@@ -120,7 +126,7 @@ initErrorList:
 loop_error:
     jal ra malloc       # struct ListNode *next = malloc    
     addi t4, s1, 1      # value + 1 (for varify) 
-    sw t4, 0(s0)
+    sw t4, 0(s0)        # next->val = s0
     sw s0, 4(t3)        # c -> next = next
     
     addi t3, t3, 8      # push heap 8 byte
@@ -133,7 +139,7 @@ loop_error:
     sw t6, 4(t3)
     
     lw ra, 0(sp)        # load return address
-    lw a0, 4(sp)        # load list head address
+    lw a0, 4(sp)        # get back list head
     addi sp, sp, 8
     
     jr ra
@@ -142,7 +148,10 @@ StorageCycle:
     addi t6, t3, 0
     ecall
     jr ra
-print_list:
+has_cycle:
+    la a0, fff
+    li a7, 4
+    ecall
     lw a0, 0(t1)        # load value to a0
     li a7, 1            # system call: print int
     ecall
@@ -151,13 +160,49 @@ print_list:
     li a7, 11           # print char
     ecall
     
+    la a0, ddd
+    li a7, 4
+    ecall
+    lw a0, 0(t6)        # load value to a0
+    li a7, 1            # system call: print int
+    ecall
+    
+    li a0, 9            # tab
+    li a7, 11           # print char
+    ecall
+     
     lw t1, 4(t1)        # t1 = t1->next
-    bne t1, zero print_list
+    
+    lw t6, 4(t6)
+    lw t6, 4(t6)
+  
+    li a0, 10           # next line
+    li a7, 11           # print char
+    ecall  
+    
+    beq [t1], [x0] NoCycleEnd
+    beq [t1], [t6] CycleEnd
+    bne t1, x0 has_cycle
+EndTest:
+    jr ra
+
+CycleEnd:
+    la a0, Cycle
+    li a7, 4
+    ecall
     li a0, 10           # next line
     li a7, 11           # print char
     ecall
-    
-    jr ra
+    j EndTest
+NoCycleEnd:
+    la a0, NoCycle
+    li a7, 4
+    ecall
+    li a0, 10           # next line
+    li a7, 11           # print char
+    ecall
+    j EndTest
+
 malloc:
     li a7, 214          # brk
     ecall
